@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #a0522d;
+  --color-on-primary: #ffffff;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  :root {
+    --surface: #fdf8f0;
+    --surface-strong: #f5ebdd;
+    --surface-raised: #faf3e9;
+    --surface-soft: #efe3d4;
+    --surface-border: #e5d4c0;
+    --card: #fffef9;
+    --text: #2d2218;
+    --muted: #8b755d;
+    --border: #d4c0a8;
+    --primary: #a0522d;
+    --primary-hover: #8b4513;
+    --primary-soft: #f5e6dc;
+    --on-primary: #ffffff;
+    --field: #fdf8f0;
+    --placeholder: #a8947e;
+    --success: #6b8e23;
+    --success-soft: #f0f4e4;
+    --success-border: #c8d8a0;
+    --danger: #8b2d1c;
+    --danger-soft: #fbeae5;
+    --danger-border: #f0c6ba;
+    --warning: #c98a12;
+    --warning-soft: #fdf3e0;
+    --warning-border: #f3d9a4;
+    --shadow: rgba(45, 34, 24, 0.08);
+    --shadow-strong: rgba(45, 34, 24, 0.16);
+  }
+  [data-theme='dark'] {
+    --surface: #1e1812;
+    --surface-strong: #2a221a;
+    --surface-raised: #241d15;
+    --surface-soft: #3d3024;
+    --surface-border: #4a3d2e;
+    --card: #261e14;
+    --text: #f5ebe0;
+    --muted: #c9b8a0;
+    --border: #4a3d2e;
+    --primary: #d4a574;
+    --primary-hover: #e2b88f;
+    --primary-soft: #3d3024;
+    --on-primary: #2d1a0a;
+    --field: #1a140c;
+    --placeholder: #a8947e;
+    --success: #a3c453;
+    --success-soft: #2a3518;
+    --success-border: #5a7a2a;
+    --danger: #f0a08c;
+    --danger-soft: #3d1a14;
+    --danger-border: #7a3526;
+    --warning: #f0c05f;
+    --warning-soft: #3d3014;
+    --warning-border: #7a6520;
+    --shadow: rgba(0, 0, 0, 0.35);
+    --shadow-strong: rgba(0, 0, 0, 0.55);
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background-color: var(--surface);
+    color: var(--text);
+    overscroll-behavior: none;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+[data-theme='dark'] body {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/* Theme-aware surfaces for Qnion palette. */
+[data-theme='dark'] .bg-white,
+[data-theme='dark'] [class~="bg-white/90"],
+[data-theme='dark'] [class~="bg-white/40"] {
+  background-color: var(--card) !important;
+}
+[data-theme='dark'] [class~="bg-[#fdf8f0]"],
+[data-theme='dark'] [class~="bg-slate-50"],
+[data-theme='dark'] [class~="bg-slate-50/30"],
+[data-theme='dark'] [class~="bg-slate-50/50"],
+[data-theme='dark'] [class~="bg-slate-100"] {
+  background-color: var(--surface-strong) !important;
+}
+[data-theme='dark'] [class~="bg-slate-200"] {
+  background-color: var(--border) !important;
+}
+[data-theme='dark'] [class~="bg-[#f5ebdd]"],
+[data-theme='dark'] [class~="bg-[#f5ebdd]/50"],
+[data-theme='dark'] [class~="bg-[#f5ebdd]/60"] {
+  background-color: var(--surface-raised) !important;
+}
+[data-theme='dark'] [class~="bg-[#efe3d4]"],
+[data-theme='dark'] [class~="bg-[#faf3e9]"],
+[data-theme='dark'] [class~="bg-[#fffef9]"] {
+  background-color: var(--surface-raised) !important;
+}
+[data-theme='dark'] [class~="bg-[#f0f4e4]"] {
+  background-color: var(--surface-soft) !important;
+}
+[data-theme='dark'] [class~="bg-[#efe3d4]"],
+[data-theme='dark'] [class~="bg-[#f5e6dc]/70"] {
+  background-color: var(--surface-raised) !important;
+}
+[data-theme='dark'] [class~="bg-[#8b4513]"],
+[data-theme='dark'] [class~="bg-[var(--primary)]"] {
+  background-color: var(--primary) !important;
+}
+[data-theme='dark'] [class~="bg-[#8b4513]"][class~="text-white"],
+[data-theme='dark'] [class~="bg-[var(--primary)]"][class~="text-white"] {
+  color: var(--on-primary) !important;
+}
+[data-theme='dark'] [class~="bg-[#2d1a0a]"] {
+  background-color: #1a1006 !important;
+}
+[data-theme='dark'] [class~="bg-[#2D2218]"] {
+  background-color: #1e1812 !important;
+}
+
+/* Text and icon contrast. */
+[data-theme='dark'] .text-slate-900,
+[data-theme='dark'] .text-slate-800,
+[data-theme='dark'] [class~="text-[#2d2218]"],
+[data-theme='dark'] [class~="text-[#131b2e]"] {
+  color: var(--text) !important;
+}
+[data-theme='dark'] .text-slate-700,
+[data-theme='dark'] .text-slate-600,
+[data-theme='dark'] .text-slate-500,
+[data-theme='dark'] [class~="text-[#8b755d]"],
+[data-theme='dark'] [class~="text-[#434655]"] {
+  color: var(--muted) !important;
+}
+[data-theme='dark'] .text-slate-400 {
+  color: var(--muted) !important;
+}
+[data-theme='dark'] [class~="text-[#a0522d]"],
+[data-theme='dark'] [class~="text-[var(--primary)]"] {
+  color: var(--primary) !important;
+}
+[data-theme='dark'] [class~="border-[#a0522d]"] {
+  border-color: var(--primary) !important;
+}
+[data-theme='dark'] [class~="text-[#1a0d05]"],
+[data-theme='dark'] [class~="text-[#0f2a59]"] {
+  color: var(--text) !important;
+}
+[data-theme='dark'] [class~="text-[#44474f]"] {
+  color: var(--muted) !important;
+}
+
+/* Borders and controls. */
+[data-theme='dark'] .border-slate-200,
+[data-theme='dark'] .border-slate-100,
+[data-theme='dark'] .border-slate-200\/80,
+[data-theme='dark'] [class~="border-[#e5d4c0]/30"],
+[data-theme='dark'] [class~="border-[#efe3d4]"],
+[data-theme='dark'] [class~="border-[#d4c0a8]/40"],
+[data-theme='dark'] [class~="border-[#2d2218]/15"],
+[data-theme='dark'] [class~="border-[#2d2218]/20"],
+[data-theme='dark'] [class~="border-white/40"] {
+  border-color: var(--border) !important;
+}
+[data-theme='dark'] input,
+[data-theme='dark'] textarea,
+[data-theme='dark'] select {
+  color: var(--text);
+}
+[data-theme='dark'] input,
+[data-theme='dark'] textarea {
+  background-color: var(--field);
+}
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+[data-theme='dark'] select option {
+  background-color: var(--card);
+  color: var(--text);
+}
+
+/* Status colors remain distinct in dark mode without pale light cards. */
+[data-theme='dark'] [class~="bg-[#FEF2F2]"],
+[data-theme='dark'] [class~="bg-[#FEF2F2]/60"],
+[data-theme='dark'] [class~="bg-red-50"],
+[data-theme='dark'] [class~="bg-red-100"] {
+  background-color: var(--danger-soft) !important;
+}
+[data-theme='dark'] [class~="border-[#FECACA]"],
+[data-theme='dark'] [class~="border-red-200/80"] {
+  border-color: var(--danger-border) !important;
+}
+[data-theme='dark'] [class~="text-[#B91C1C]"],
+[data-theme='dark'] [class~="text-red-700"],
+[data-theme='dark'] [class~="text-red-800"] {
+  color: var(--danger) !important;
+}
+[data-theme='dark'] [class~="bg-[#F0FDF4]"],
+[data-theme='dark'] [class~="bg-[#F0FDF4]/50"],
+[data-theme='dark'] [class~="bg-emerald-50"],
+[data-theme='dark'] [class~="bg-emerald-100"] {
+  background-color: var(--success-soft) !important;
+}
+[data-theme='dark'] [class~="border-[#BBF7D0]"],
+[data-theme='dark'] [class~="border-emerald-200/60"],
+[data-theme='dark'] [class~="border-emerald-400"] {
+  border-color: var(--success-border) !important;
+}
+[data-theme='dark'] [class~="text-[#15803D]"],
+[data-theme='dark'] [class~="text-emerald-800"],
+[data-theme='dark'] [class~="text-[#6b8e23]"] {
+  color: var(--success) !important;
+}
+[data-theme='dark'] [class~="bg-[#6b8e23]"] {
+  background-color: #5a7a2a !important;
+}
+[data-theme='dark'] [class~="bg-[#a0522d]"] {
+  background-color: #8b4513 !important;
+}
+[data-theme='dark'] [class~="bg-[#c98a12]"],
+[data-theme='dark'] [class~="bg-amber-100"] {
+  background-color: #a8740f !important;
+}
+[data-theme='dark'] [class~="text-[#c98a12]"],
+[data-theme='dark'] [class~="text-amber-800"] {
+  color: var(--warning) !important;
+}
+
+/* Hover and active states use the active theme palette. */
+[data-theme='dark'] [class~="hover:bg-slate-50/50"]:hover,
+[data-theme='dark'] [class~="hover:bg-slate-50"]:hover,
+[data-theme='dark'] [class~="active:bg-slate-100"]:active {
+  background-color: var(--surface-strong) !important;
+}
+[data-theme='dark'] [class~="hover:bg-[#efe3d4]"]:hover,
+[data-theme='dark'] [class~="hover:bg-[#faf3e9]"]:hover,
+[data-theme='dark'] [class~="hover:bg-[#f5ebdd]"]:hover {
+  background-color: var(--surface-soft) !important;
+}
+[data-theme='dark'] [class~="hover:bg-[#8b4513]"]:hover {
+  background-color: var(--primary-hover) !important;
+}

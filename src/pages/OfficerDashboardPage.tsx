@@ -10,7 +10,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Target,
-  Users,
 } from "lucide-react";
 import {
   Bar,
@@ -30,10 +29,7 @@ import { ChatbotFab } from "../components/ChatbotFab";
 import {
   officerStats,
   recentInspections,
-  violationRecords,
   penaltyRecords,
-  repeatedOffenders,
-  evidenceRecords,
 } from "../data/officerPrototypeData";
 import { SAMPLE_DATASETS } from "../data/presets";
 import { generateInspectionPdf } from "../services/pdfService";
@@ -77,6 +73,44 @@ const fixtureActivity = Array.from({ length: 7 }, (_, index) => {
   };
 });
 
+const averageGrade = (key: "gradeA" | "urs" | "rejected") =>
+  Math.round(
+    SAMPLE_DATASETS.reduce(
+      (total, sample) => total + sample.gradeBreakdown[key],
+      0,
+    ) / SAMPLE_DATASETS.length,
+  );
+
+const totalOnionsInspected = SAMPLE_DATASETS.reduce(
+  (total, sample) => total + sample.boundingBoxes.length,
+  0,
+);
+const totalDefectiveOnions = SAMPLE_DATASETS.reduce(
+  (total, sample) =>
+    total + sample.boundingBoxes.filter((onion) => onion.label !== "GOOD").length,
+  0,
+);
+
+const defectData = [
+  { label: "Rotten", code: "ROTTEN", color: "#8b2d1c" },
+  { label: "Sprouted", code: "SPROUTED", color: "#c98a12" },
+  { label: "Damaged", code: "DAMAGED", color: "#a0522d" },
+  { label: "Undersized", code: "UNDERSIZED", color: "#6b8e23" },
+].map((defect) => ({
+  ...defect,
+  count: SAMPLE_DATASETS.reduce(
+    (total, sample) =>
+      total +
+      sample.boundingBoxes.filter((onion) => onion.label === defect.code).length,
+    0,
+  ),
+}));
+
+const maxDefectCount = Math.max(...defectData.map((defect) => defect.count));
+
+const centreName = (location?: string) =>
+  (location ?? "Not recorded").replace(/\s+Procurement Centre$/i, "");
+
 export const OfficerDashboardPage: React.FC<{
   navigate: (path: string) => void;
 }> = ({ navigate }) => {
@@ -85,17 +119,13 @@ export const OfficerDashboardPage: React.FC<{
     null,
   );
   const [reportMessage, setReportMessage] = useState("");
-  const downloadInspectionReport = async (
-    inspection: (typeof recentInspections)[number],
-  ) => {
-    const sample = SAMPLE_DATASETS.find(
-      (dataset) => dataset.id === inspection.sampleId,
-    );
+  const downloadSampleReport = async (sampleId: string) => {
+    const sample = SAMPLE_DATASETS.find((dataset) => dataset.id === sampleId);
     if (!sample) {
       setReportMessage(t("reportUnavailable"));
       return;
     }
-    setDownloadingReport(inspection.id);
+    setDownloadingReport(sampleId);
     setReportMessage("");
     try {
       await generateInspectionPdf(sample, { language });
@@ -189,13 +219,33 @@ export const OfficerDashboardPage: React.FC<{
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-lg font-bold">
-                {t("recentInspections")}
+                {t("inspectionSummary")}
               </h2>
               <p className="mt-1 text-xs text-[var(--muted)]">
                 {t("recentSub")}
               </p>
             </div>
             <FileCheck2 className="h-5 w-5 text-[var(--primary)]" />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+            {[
+              [t("totalOnionsInspected"), String(totalOnionsInspected)],
+              [t("gradeAPercentage"), `${averageGrade("gradeA")}%`],
+              [t("ursPercentage"), `${averageGrade("urs")}%`],
+              [t("rejectedPercentage"), `${averageGrade("rejected")}%`],
+              [t("averageQualityScore"), `${averageGrade("gradeA")}%`],
+              [t("defectiveOnions"), String(totalDefectiveOnions)],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-3"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  {label}
+                </p>
+                <p className="mt-2 font-display text-xl font-bold">{value}</p>
+              </div>
+            ))}
           </div>
           {reportMessage && (
             <p
@@ -243,12 +293,12 @@ export const OfficerDashboardPage: React.FC<{
                         <button
                           type="button"
                           aria-label={`${t("viewDetails")} - ${t("downloadReport")}`}
-                          onClick={() => void downloadInspectionReport(item)}
-                          disabled={downloadingReport === item.id}
+                          onClick={() => void downloadSampleReport(item.sampleId)}
+                          disabled={downloadingReport === item.sampleId}
                           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] disabled:opacity-50 cursor-pointer"
                         >
                           <span>{t("downloadReport")}</span>
-                          {downloadingReport === item.id ? (
+                          {downloadingReport === item.sampleId ? (
                             <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
                           ) : (
                             <Download className="h-3.5 w-3.5" />
@@ -264,141 +314,210 @@ export const OfficerDashboardPage: React.FC<{
             </table>
           </div>
         </section>
-        <div className="order-6 grid gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-display text-lg font-bold">
-                  {t("violationTracker")}
-                </h2>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  {t("sampleData")}
-                </p>
-              </div>
-              <ShieldAlert className="h-5 w-5 text-red-500" />
-            </div>
-            <div className="mt-4 space-y-3">
-              {violationRecords.map((item) => (
-                <div
-                  key={item.product}
-                  className="rounded-xl border border-[var(--border)] p-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">{item.issue}</p>
-                      <p className="text-xs text-[var(--muted)]">
-                        {item.product}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-1 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
-                      {item.status}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-[var(--muted)]">
-                    {t("ruleReference")}: {item.rule}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-display text-lg font-bold">
-                  {t("penaltyTracker")}
-                </h2>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  {t("prototypeAmount")}
-                </p>
-              </div>
-              <Target className="h-5 w-5 text-[var(--primary)]" />
-            </div>
-            <div className="mt-4 space-y-3">
-              {penaltyRecords.map((item) => (
-                <div
-                  key={item.product}
-                  className="rounded-xl border border-[var(--border)] p-3"
-                >
-                  <div className="flex justify-between gap-3">
-                    <p className="font-semibold">{item.product}</p>
-                    <span className="text-xs font-semibold text-[var(--muted)]">
-                      {item.amount}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    {item.issue}
-                  </p>
-                  <p className="mt-2 text-xs text-[var(--primary)]">
-                    {item.status}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-        <div className="order-6 grid gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <div className="flex items-center justify-between">
+        <section className="order-8 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <div className="flex items-center justify-between">
+            <div>
               <h2 className="font-display text-lg font-bold">
-                {t("repeatedOffenders")}
+                {t("penaltyTracker")}
               </h2>
-              <Users className="h-5 w-5 text-[var(--primary)]" />
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {t("prototypeAmount")}
+              </p>
             </div>
-            <div className="mt-4 space-y-3">
-              {repeatedOffenders.map((item) => (
-                <div
-                  key={item.entity}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] p-3"
-                >
-                  <div>
-                    <p className="font-semibold">{item.entity}</p>
-                    <p className="text-xs text-[var(--muted)]">{item.recent}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-xl font-bold">
-                      {item.count}
+            <ShieldAlert className="h-5 w-5 text-red-500" />
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {penaltyRecords.map((item) => (
+              <div
+                key={`${item.product}-${item.issue}`}
+                className="rounded-xl border border-[var(--border)] p-3"
+              >
+                <div className="flex justify-between gap-3">
+                  <p className="font-semibold">{item.product}</p>
+                  <span className="text-xs font-semibold text-[var(--muted)]">
+                    {item.amount}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {item.issue}
+                </p>
+                <p className="mt-2 text-xs text-[var(--primary)]">
+                  {item.status}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="order-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold">{t("evidence")}</h2>
+              <p className="mt-1 text-xs text-[var(--muted)]">{t("noData")}</p>
+            </div>
+            <MapPin className="h-5 w-5 text-[var(--primary)]" />
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {SAMPLE_DATASETS.slice(0, 4).map((sample) => (
+              <article
+                key={sample.id}
+                className="rounded-xl border border-[var(--border)] p-3"
+              >
+                <div className="flex gap-3">
+                  <img
+                    src={sample.thumbnailUrl ?? sample.imagePath}
+                    alt={`${sample.name} sample`}
+                    className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                  />
+                  <div className="min-w-0">
+                    <p className="font-mono text-xs font-semibold">
+                      {sample.caseReference ?? sample.id}
                     </p>
-                    <p className="text-[10px] uppercase text-[var(--muted)]">
-                      {item.status}
+                    <h3 className="mt-1 truncate font-semibold">{sample.name}</h3>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      Procurement Centre: {centreName(sample.inspectionLocation)}
+                    </p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {(sample.inspectionDateTime ?? "Not recorded").replace(
+                        " - ",
+                        " | ",
+                      )}
                     </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg bg-[var(--success-soft)] px-2 py-2">
+                    <p className="text-[10px] text-[var(--muted)]">Grade A</p>
+                    <p className="text-sm font-bold text-[var(--success)]">
+                      {sample.gradeBreakdown.gradeA}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-[var(--warning-soft)] px-2 py-2">
+                    <p className="text-[10px] text-[var(--muted)]">URS</p>
+                    <p className="text-sm font-bold text-[var(--warning)]">
+                      {sample.gradeBreakdown.urs}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-[var(--danger-soft)] px-2 py-2">
+                    <p className="text-[10px] text-[var(--muted)]">Rejected</p>
+                    <p className="text-sm font-bold text-[var(--danger)]">
+                      {sample.gradeBreakdown.rejected}%
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={sample.imagePath}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex flex-1 items-center justify-center rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--text)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                  >
+                    {t("viewSample")}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void downloadSampleReport(sample.id)}
+                    disabled={downloadingReport === sample.id}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--primary)] px-3 py-2 text-xs font-semibold text-[var(--on-primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50 cursor-pointer"
+                  >
+                    {downloadingReport === sample.id ? (
+                      <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                    {t("downloadReport")}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+        <div className="order-7 grid gap-6 lg:grid-cols-2">
           <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-display text-lg font-bold">
-                  {t("evidence")}
+                  {t("defectAnalysis")}
                 </h2>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  {t("noData")}
+                  Detected markers across sample fixtures
+                </p>
+              </div>
+              <ShieldAlert className="h-5 w-5 text-[var(--primary)]" />
+            </div>
+            <div className="mt-5 space-y-4">
+              {defectData.map((defect) => (
+                <div key={defect.code}>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-semibold">{defect.label}</span>
+                    <span className="font-mono text-xs text-[var(--muted)]">
+                      {defect.count}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-[var(--surface-soft)]">
+                    <div
+                      className="h-2 rounded-full"
+                      style={{
+                        width: `${(defect.count / maxDefectCount) * 100}%`,
+                        backgroundColor: defect.color,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/officer/scan")}
+              className="mt-5 inline-flex items-center rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--primary)] hover:border-[var(--primary)] cursor-pointer"
+            >
+              {t("detailedAnalysis")}
+            </button>
+          </section>
+
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-lg font-bold">
+                  {t("procurementComparison")}
+                </h2>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  Quality mix by sample procurement centre
                 </p>
               </div>
               <MapPin className="h-5 w-5 text-[var(--primary)]" />
             </div>
-            <div className="mt-4 space-y-3">
-              {evidenceRecords.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl border border-[var(--border)] p-3"
-                >
-                  <div className="flex justify-between gap-3">
-                    <p className="font-mono text-xs">{item.id}</p>
-                    <span className="text-xs text-[var(--muted)]">
-                      {item.location}
-                    </span>
-                  </div>
-                  <p className="mt-2 font-semibold">{item.product}</p>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    {item.timestamp} · {item.rule}
-                  </p>
-                  <p className="mt-2 break-all font-mono text-[10px] text-[var(--muted)]">
-                    {item.hash}
-                  </p>
-                </div>
-              ))}
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[430px] text-left text-sm">
+                <thead className="border-b border-[var(--border)] text-xs text-[var(--muted)]">
+                  <tr>
+                    <th className="p-3">Procurement Centre</th>
+                    <th className="p-3">Grade A</th>
+                    <th className="p-3">URS</th>
+                    <th className="p-3">Rejected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {SAMPLE_DATASETS.map((sample) => (
+                    <tr
+                      key={sample.id}
+                      className="border-b border-[var(--border)] last:border-0"
+                    >
+                      <td className="p-3 font-semibold">
+                        {centreName(sample.inspectionLocation)}
+                      </td>
+                      <td className="p-3 text-[var(--success)]">
+                        {sample.gradeBreakdown.gradeA}%
+                      </td>
+                      <td className="p-3 text-[var(--warning)]">
+                        {sample.gradeBreakdown.urs}%
+                      </td>
+                      <td className="p-3 text-[var(--danger)]">
+                        {sample.gradeBreakdown.rejected}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </section>
         </div>

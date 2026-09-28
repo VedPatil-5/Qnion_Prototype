@@ -40,7 +40,19 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       </section>
 
       <section className="w-full max-w-3xl mx-auto rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-6 sm:p-8 text-center shadow-xs">
-        <img src="/assets/qnion-logo.png" alt="Qnion onion cutaway" className="mx-auto h-28 w-28 rounded-3xl object-contain bg-[#fff4de]" />
+        <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl bg-[#fff4de] aspect-video">
+          <video
+            className="h-full w-full object-contain"
+            src="/assets/onion-workflow.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster="/assets/qnion-logo.png"
+            aria-label={t('demo')}
+          />
+        </div>
         <p className="mt-4 text-sm font-semibold text-[var(--text)]">{t('demo')}</p>
         <p className="mt-1 text-xs text-[var(--muted)]">{t('demoIdle')}</p>
       </section>

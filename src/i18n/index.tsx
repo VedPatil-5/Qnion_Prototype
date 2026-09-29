@@ -146,7 +146,11 @@ const translations: Record<Language, Record<string, string>> = {
     stageGrading: 'Quality Grading',
     stageVerdict: 'Grade Verdict',
     batchBreakdown: 'Batch grade breakdown',
-    preparingReport: 'Preparing report…'
+    preparingReport: 'Preparing report…',
+    generateSticker: 'Generate Sticker',
+    preparingSticker: 'Preparing sticker…',
+    stickerDownloaded: 'Batch sticker PDF downloaded',
+    stickerUnavailable: 'This batch sticker is unavailable in the prototype dataset.'
   },
   hi: {
     brand: 'Qnion',
@@ -280,7 +284,11 @@ const translations: Record<Language, Record<string, string>> = {
     stageGrading: 'गुणवत्ता ग्रेडिंग',
     stageVerdict: 'बैच निर्णय',
     batchBreakdown: 'बैच ग्रेड वर्गीकरण',
-    preparingReport: 'रिपोर्ट तैयार की जा रही है…'
+    preparingReport: 'रिपोर्ट तैयार की जा रही है…',
+    generateSticker: 'स्टिकर बनाएं',
+    preparingSticker: 'स्टिकर तैयार किया जा रहा है…',
+    stickerDownloaded: 'बैच स्टिकर PDF डाउनलोड हो गई',
+    stickerUnavailable: 'इस प्रोटोटाइप बैच का स्टिकर उपलब्ध नहीं है।'
   },
   mr: {
     brand: 'Qnion',
@@ -414,7 +422,11 @@ const translations: Record<Language, Record<string, string>> = {
     stageGrading: 'गुणवत्ता प्रतवारी',
     stageVerdict: 'बॅच निकाल',
     batchBreakdown: 'बॅच ग्रेड वर्गीकरण',
-    preparingReport: 'अहवाल तयार केला जात आहे…'
+    preparingReport: 'अहवाल तयार केला जात आहे…',
+    generateSticker: 'स्टिकर तयार करा',
+    preparingSticker: 'स्टिकर तयार केला जात आहे…',
+    stickerDownloaded: 'बॅच स्टिकर PDF डाउनलोड झाला',
+    stickerUnavailable: 'या प्रोटोटाइप बॅचचा स्टिकर उपलब्ध नाही.'
   }
 };
 

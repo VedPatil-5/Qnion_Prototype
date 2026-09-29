@@ -5,7 +5,7 @@ import { PhotosGrid } from './PhotosGrid';
 import { BoundingBoxOverlay } from './BoundingBoxOverlay';
 import { PipelineStepper } from './PipelineStepper';
 import { ResultsPanel } from './ResultsPanel';
-import { generateInspectionPdf } from '../services/pdfService';
+import { generateBatchStickerPdf, generateInspectionPdf } from '../services/pdfService';
 import {
   Image as ImageIcon,
   CheckCircle2,
@@ -31,6 +31,7 @@ export const ScannerTab: React.FC = () => {
 
   // PDF Generation State
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
+  const [isGeneratingSticker, setIsGeneratingSticker] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -115,6 +116,20 @@ export const ScannerTab: React.FC = () => {
       showToast(t('reportUnavailable'));
     } finally {
       setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleGenerateSticker = async (qrDataUrl: string) => {
+    if (!activeSample) return;
+    try {
+      setIsGeneratingSticker(true);
+      await generateBatchStickerPdf(activeSample, qrDataUrl);
+      showToast(t('stickerDownloaded'));
+    } catch (err) {
+      console.error('Sticker PDF error:', err);
+      showToast(t('stickerUnavailable'));
+    } finally {
+      setIsGeneratingSticker(false);
     }
   };
 
@@ -243,7 +258,9 @@ export const ScannerTab: React.FC = () => {
           <ResultsPanel
             sample={activeSample}
             onDownloadPdf={handleDownloadPdf}
+            onGenerateSticker={handleGenerateSticker}
             isGeneratingPdf={isGeneratingPdf}
+            isGeneratingSticker={isGeneratingSticker}
           />
 
           {/* Secondary Bottom Action: Test Another Product from Library */}

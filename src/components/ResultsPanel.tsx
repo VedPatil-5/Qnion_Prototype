@@ -1,23 +1,36 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { SampleDataset } from '../types';
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Download, RefreshCw, Sprout } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Download, Printer, RefreshCw, Sprout } from 'lucide-react';
 import { useI18n } from '../i18n';
+import { getGs1DigitalLink } from '../services/qrService';
 
 interface ResultsPanelProps {
   sample: SampleDataset;
   onDownloadPdf: () => void;
+  onGenerateSticker: (qrDataUrl: string) => void;
   isGeneratingPdf?: boolean;
+  isGeneratingSticker?: boolean;
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   sample,
   onDownloadPdf,
-  isGeneratingPdf = false
+  onGenerateSticker,
+  isGeneratingPdf = false,
+  isGeneratingSticker = false
 }) => {
   const { t } = useI18n();
   const [downgradedOpen, setDowngradedOpen] = useState(true);
   const [gradeOpen, setGradeOpen] = useState(true);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const { gradeA, urs, rejected } = sample.gradeBreakdown;
+  const gs1DigitalLink = getGs1DigitalLink(sample);
+
+  const handleGenerateSticker = () => {
+    const qrDataUrl = qrCanvasRef.current?.toDataURL('image/png');
+    if (qrDataUrl) onGenerateSticker(qrDataUrl);
+  };
 
   return (
     <div className="flex flex-col gap-4 font-sans">
@@ -31,6 +44,40 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
             <Grade label={t('gradeA')} value={gradeA} tone="bg-[#6b8e23]" />
             <Grade label={t('urs')} value={urs} tone="bg-[#c98a12]" />
             <Grade label={t('rejected')} value={rejected} tone="bg-[#8b2d1c]" />
+          </div>
+        </div>
+      </section>
+
+      {/* GS1 Digital Link QR and compact sticker export */}
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden shadow-xs">
+        <div className="p-4 bg-[var(--surface-raised)]">
+          <p className="text-xs font-bold uppercase tracking-[.16em] text-[var(--primary)]">
+            GS1 Digital Link
+          </p>
+          <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row sm:items-center">
+            <div className="shrink-0 rounded-xl bg-white p-2 shadow-xs" role="img" aria-label="GS1 Digital Link QR code">
+              <QRCodeCanvas
+                ref={qrCanvasRef}
+                value={gs1DigitalLink}
+                size={160}
+                includeMargin
+                level="M"
+                bgColor="#ffffff"
+                fgColor="#000000"
+              />
+            </div>
+            <div className="flex w-full flex-col gap-2">
+              <p className="break-all text-[11px] leading-relaxed text-[var(--muted)]">{gs1DigitalLink}</p>
+              <button
+                type="button"
+                onClick={handleGenerateSticker}
+                disabled={isGeneratingSticker}
+                className="w-full rounded-xl border border-[var(--primary)] bg-[var(--card)] py-3 text-sm font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary-soft)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isGeneratingSticker ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                {isGeneratingSticker ? t('preparingSticker') : t('generateSticker')}
+              </button>
+            </div>
           </div>
         </div>
       </section>

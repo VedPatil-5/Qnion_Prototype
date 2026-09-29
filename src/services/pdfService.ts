@@ -1,11 +1,15 @@
 import { jsPDF } from 'jspdf';
 import { SampleDataset } from '../types';
+import { getCrateId, getGs1DigitalLink } from './qrService';
 export type PdfLanguage = 'en' | 'hi' | 'mr';
 
 const brown: [number, number, number] = [74, 29, 18];
 const orange: [number, number, number] = [201, 111, 34];
 const green: [number, number, number] = [93, 143, 20];
 const red: [number, number, number] = [169, 70, 28];
+const stickerGreen: [number, number, number] = [107, 142, 35];
+const stickerAmber: [number, number, number] = [201, 138, 18];
+const stickerRed: [number, number, number] = [139, 45, 28];
 const wrap = (doc: jsPDF, text: string, x: number, y: number, width: number, leading = 5) => {
   const lines = doc.splitTextToSize(text, width);
   doc.text(lines, x, y);
@@ -35,5 +39,44 @@ export async function generateInspectionPdf(sample: SampleDataset, _options: { l
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); sample.compliant.forEach((item) => { doc.setTextColor(...green); doc.text(`${item.label}: ${item.value}`, margin, y); doc.setTextColor(75, 59, 45); y = wrap(doc, item.desc, margin, y + 5, width - margin * 2, 4) + 4; });
   doc.setDrawColor(222, 202, 176); doc.line(margin, 282, width - margin, 282); doc.setTextColor(112, 88, 66); doc.setFontSize(8); doc.text('Qnion prototype - sample data only. This report is not a procurement decision.', margin, 288);
   doc.save(`Qnion_Batch_Report_${sample.caseReference ?? sample.id}.pdf`);
+  return doc.output('blob');
+}
+
+/** Generates the compact thermal/inkjet sticker for one batch. */
+export async function generateBatchStickerPdf(sample: SampleDataset, qrDataUrl: string): Promise<Blob> {
+  if (!qrDataUrl) {
+    throw new Error('The batch QR code is not ready yet.');
+  }
+
+  const qrSize = 30;
+  const badgeWidth = 24;
+  const badgeGap = 0.8;
+  const qrBadgeGap = 1.5;
+  const badgeHeight = (qrSize - badgeGap * 2) / 3;
+  const stickerWidth = qrSize + qrBadgeGap + badgeWidth;
+  const stickerHeight = qrSize;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [stickerWidth, stickerHeight], compress: true });
+  const { gradeA, urs, rejected } = sample.gradeBreakdown;
+
+  doc.addImage(qrDataUrl, 'PNG', 0, 0, qrSize, qrSize);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  const badges = [
+    [`Grade A: ${gradeA}%`, stickerGreen],
+    [`URS: ${urs}%`, stickerAmber],
+    [`Rejected: ${rejected}%`, stickerRed]
+  ] as const;
+  badges.forEach(([label, color], index) => {
+    const badgeY = index * (badgeHeight + badgeGap);
+    doc.setFillColor(...color);
+    doc.roundedRect(qrSize + qrBadgeGap, badgeY, badgeWidth, badgeHeight, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text(label, qrSize + qrBadgeGap + badgeWidth / 2, badgeY + badgeHeight / 2 + 1.7, { align: 'center' });
+  });
+
+  const crateId = getCrateId(sample);
+  // Keep the URL construction in the sticker flow so malformed batch references fail loudly.
+  getGs1DigitalLink(sample);
+  doc.save(`Qnion_Batch_Sticker_${crateId}.pdf`);
   return doc.output('blob');
 }
